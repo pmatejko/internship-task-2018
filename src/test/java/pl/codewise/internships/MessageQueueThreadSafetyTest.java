@@ -104,7 +104,6 @@ public class MessageQueueThreadSafetyTest {
             consumer.join();
         }
 
-        System.out.println(totalErrorsAmount.get());
         assertEquals(errorProducers.size() * Producer.MESSAGE_AMOUNT * consumers.size(),
                 totalErrorsAmount.get());
     }
