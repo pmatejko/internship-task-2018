@@ -7,8 +7,7 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-public class MessageQueueTest {
-
+public class MessageQueueLogicTest {
 
     @Test
     public void snapshot() throws InterruptedException {

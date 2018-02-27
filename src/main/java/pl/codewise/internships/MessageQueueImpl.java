@@ -15,20 +15,16 @@ public class MessageQueueImpl implements MessageQueue {
         messageArray[insertInto] = message;
         insertInto = (insertInto + 1) % messageArray.length;
         if (insertInto == takeFrom)
-            takeFrom++;
+            takeFrom = (takeFrom + 1) % messageArray.length;
 
         messageArraySemaphore.release();
     }
 
     private void removeTooOldMessages() {
         while (messageArray[takeFrom] != null && messageArray[takeFrom].isOlderThan(MAX_MESSAGE_AGE_MILLI)) {
-            removeOneMessage();
+            messageArray[takeFrom] = null;
+            takeFrom = (takeFrom + 1) % messageArray.length;
         }
-    }
-
-    private void removeOneMessage() {
-        messageArray[takeFrom] = null;
-        takeFrom = (takeFrom + 1) % messageArray.length;
     }
 
     public Snapshot snapshot() throws InterruptedException {
@@ -38,10 +34,10 @@ public class MessageQueueImpl implements MessageQueue {
         int snapshotSize = takeFrom > insertInto ? messageArray.length - takeFrom + insertInto : insertInto - takeFrom;
         Message[] snapshotArray = new Message[snapshotSize];
 
-        int i = 0;
-        while (insertInto != takeFrom) {
-            snapshotArray[i] = messageArray[takeFrom];
-            removeOneMessage();
+        int i = 0, readFrom = takeFrom;
+        while (readFrom != insertInto) {
+            snapshotArray[i] = messageArray[readFrom];
+            readFrom = (readFrom + 1) % messageArray.length;
             ++i;
         }
 
@@ -60,6 +56,7 @@ public class MessageQueueImpl implements MessageQueue {
             int errorCode = messageArray[readFrom].getErrorCode();
             if (errorCode >= 400 && errorCode < 600)
                 errorMessagesAmount++;
+            readFrom = (readFrom + 1) % messageArray.length;
         }
 
         messageArraySemaphore.release();
